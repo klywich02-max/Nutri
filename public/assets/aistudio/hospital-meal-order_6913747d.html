@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สั่งอาหารผู้ป่วย - ต้นแบบ</title>
+<style>
+:root{
+  --ink:#17303b; --ink2:#4b6069; --paper:#eef1ee; --panel:#ffffff; --line:#d3dbd7; --soft:#f6f8f6;
+  --ok:#2e7d5b; --ok-bg:#e0f1e8; --wait:#b7840c; --wait-bg:#fbf0d2; --bad:#c23b35; --bad-bg:#fbe3e1;
+  --gold:#a8791c; --gold-bg:#f7edd3; --iso:#6b4fa0; --iso-bg:#ebe4f6; --bd:#1c6c8a; --bd-bg:#dcedf4;
+  --prep:#2f6db0; --prep-bg:#dde9f7; --shadow:0 -8px 30px rgba(10,30,40,.18);
+}
+@media (prefers-color-scheme:dark){
+  :root{color-scheme:dark;
+  --ink:#e6eeea; --ink2:#9db0a9; --paper:#0f1a1e; --panel:#17262c; --line:#2c424a; --soft:#1c2e35;
+  --ok:#59c493; --ok-bg:#173a2b; --wait:#e3b441; --wait-bg:#3b3112; --bad:#ff7a72; --bad-bg:#431c1a;
+  --gold:#e0b255; --gold-bg:#3a2e12; --iso:#b79cf0; --iso-bg:#2b2342; --bd:#6cc3e3; --bd-bg:#12323f;
+  --prep:#7db4f0; --prep-bg:#17304b; --shadow:0 -8px 30px rgba(0,0,0,.5);}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Sarabun','Noto Sans Thai','Leelawadee UI',Tahoma,system-ui,sans-serif;font-size:16px;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 14px;min-height:44px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--prep);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-height:44px}
+textarea{min-height:70px;resize:vertical}
+label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 4px}
+.req{color:var(--bad)}
+header.top{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+@media (prefers-color-scheme:dark){header.top{background:#0a1316}}
+header.top h1{font-size:18px;margin:0;font-weight:700;flex:1;min-width:150px}
+header.top small{opacity:.75;font-weight:400;display:block;font-size:13px}
+.seg{display:flex;background:rgba(255,255,255,.12);border-radius:12px;padding:3px;gap:3px}
+.seg button{background:transparent;border:0;color:#fff;padding:8px 16px;border-radius:9px;font-weight:600}
+.seg button.on{background:#fff;color:#17303b}
+.wrap{max-width:1100px;margin:0 auto;padding:14px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.tabs{display:flex;gap:6px}
+.tabs button{padding:8px 16px;font-weight:600}
+.tabs button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tabs small{display:block;font-weight:400;font-size:12px;opacity:.8}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{padding:6px 12px;min-height:38px;border-radius:99px;font-size:14px}
+.chips button.on{background:var(--ink2);color:var(--paper);border-color:var(--ink2)}
+.primary{background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700}
+.zonehead{display:flex;align-items:baseline;gap:10px;margin:20px 0 8px;padding-bottom:6px;border-bottom:3px solid var(--line)}
+.zonehead h2{margin:0;font-size:18px}
+.zonehead.sp{border-color:var(--gold)} .zonehead.iso{border-color:var(--iso)}
+.zonehead .cnt{font-size:14px;color:var(--ink2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.bed{text-align:left;padding:8px 9px;border-radius:12px;border:2px solid var(--line);background:var(--panel);display:flex;flex-direction:column;gap:3px;min-height:104px;position:relative}
+.bed .no{font-size:20px;font-weight:800;line-height:1.1}
+.bed .nm{font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bed .dt{font-size:15px;font-weight:700;line-height:1.2}
+.bed .st{font-size:12px;font-weight:700;margin-top:auto}
+.bed.ordered{background:var(--ok-bg);border-color:var(--ok)} .bed.ordered .st{color:var(--ok)}
+.bed.none{background:var(--wait-bg);border-color:var(--wait)} .bed.none .st{color:var(--wait)}
+.bed.prep{background:var(--prep-bg);border-color:var(--prep)} .bed.prep .st{color:var(--prep)}
+.bed.npo{background:var(--bad-bg);border-color:var(--bad)} .bed.npo .st{color:var(--bad)}
+.bed.vacant{background:transparent;border-style:dashed;color:var(--ink2);cursor:default;min-height:104px;justify-content:center;align-items:center}
+.bed.tube{box-shadow:inset 0 -5px 0 var(--bd)}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 6px;line-height:1.4}
+.tag.al{background:var(--bad);color:#fff}
+.tag.iso{background:var(--iso);color:#fff}
+.tag.sp{background:var(--gold);color:#fff}
+.tag.chg{background:var(--bad);color:#fff;animation:blink 1s steps(2) infinite}
+.tag.bd{background:var(--bd);color:#fff}
+@media (prefers-reduced-motion:reduce){.tag.chg{animation:none}}
+@keyframes blink{50%{opacity:.35}}
+.tagrow{position:absolute;top:6px;right:6px;display:flex;gap:3px;flex-direction:column;align-items:flex-end}
+.legend{font-size:13px;color:var(--ink2);display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:4px;border:2px solid}
+.banner{background:var(--bad-bg);border:2px solid var(--bad);border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.sheetbg{position:fixed;inset:0;background:rgba(5,15,20,.5);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--panel);width:100%;max-width:680px;max-height:94vh;overflow:auto;border-radius:20px 20px 0 0;box-shadow:var(--shadow)}
+.sheet .hd{position:sticky;top:0;background:var(--panel);padding:14px 16px 10px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start;z-index:2}
+.sheet .bd{padding:4px 16px 16px}
+.sheet .ft{position:sticky;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:8px}
+.sheet .ft .primary{flex:1;font-size:18px;min-height:52px}
+.sec{margin-top:16px}
+.sec h3{margin:0 0 6px;font-size:15px;display:flex;align-items:center;gap:8px}
+.sec h3 span.note{font-weight:400;color:var(--ink2);font-size:13px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts button{padding:8px 12px;border-radius:10px}
+.opts button.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+.opts button.on.nopt{background:var(--bad);border-color:var(--bad);color:#fff}
+.opts button.on.bdopt{background:var(--bd);border-color:var(--bd);color:#fff}
+.opts button b{display:inline-block;min-width:26px}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}
+.card.bdc{border-color:var(--bd);background:var(--bd-bg)}
+.card.al{border-color:var(--bad);background:var(--bad-bg)}
+.card.isoc{border-color:var(--iso);background:var(--iso-bg)}
+.card.spc{border-color:var(--gold);background:var(--gold-bg)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mut{color:var(--ink2);font-size:13px}
+.err{color:var(--bad);font-weight:700;font-size:14px;margin-top:6px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:44px;font-size:20px;padding:0}
+.stepper b{min-width:28px;text-align:center;font-size:20px}
+.log{font-size:13px;color:var(--ink2);padding-left:18px;margin:4px 0}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;z-index:80;display:flex;gap:12px;align-items:center;max-width:92vw}
+@media (prefers-color-scheme:dark){.toast{background:#e6eeea;color:#0f1a1e}}
+.toast button{min-height:34px;padding:4px 10px;background:transparent;color:inherit;border-color:currentColor}
+.demo{margin:22px 0 4px;padding:10px 12px;border:1px dashed var(--line);border-radius:12px;font-size:14px;color:var(--ink2);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+/* Kitchen */
+table.sum{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+table.sum th,table.sum td{padding:9px 10px;text-align:center;border-bottom:1px solid var(--line)}
+table.sum th:first-child,table.sum td:first-child{text-align:left}
+table.sum thead th{background:var(--soft);font-size:14px}
+table.sum tfoot td{font-weight:800;background:var(--soft)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi b{font-size:26px;display:block;line-height:1.1}
+.kpi span{font-size:13px;color:var(--ink2)}
+.row{display:grid;grid-template-columns:70px 1fr auto;gap:10px;align-items:center;background:var(--panel);border:2px solid var(--line);border-left-width:8px;border-radius:12px;padding:8px 10px;margin-bottom:6px}
+.row.ordered{border-left-color:var(--wait)} .row.prep{border-left-color:var(--prep)} .row.sent,.row.left{border-left-color:var(--ok);opacity:.8}
+.row.tube{background:var(--bd-bg)}
+.row .no{font-size:22px;font-weight:800}
+.row .info .d{font-weight:700}
+.row .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.row .acts button{min-height:42px;padding:6px 12px;font-size:14px}
+.row .acts .adv{font-weight:700;min-width:118px}
+.row .acts .adv.ordered{background:var(--wait-bg);border-color:var(--wait)}
+.row .acts .adv.prep{background:var(--prep-bg);border-color:var(--prep)}
+.row .acts .adv.sent,.row .acts .adv.left{background:var(--ok-bg);border-color:var(--ok)}
+@media (max-width:560px){.row{grid-template-columns:56px 1fr}.row .acts{grid-column:1/-1;justify-content:stretch}.row .acts button{flex:1}.two{grid-template-columns:1fr}}
+/* labels */
+.labels{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.lab{border:3px solid #000;border-radius:8px;padding:8px 10px;background:#fff;color:#000;break-inside:avoid;font-size:14px}
+.lab .big{font-size:26px;font-weight:800;line-height:1.1}
+.lab.bdl{border-color:#1c6c8a;background:#e3f2f8}
+.lab.isol{border-style:dashed;border-color:#6b4fa0}
+.lab .bar2{margin:-8px -10px 6px;padding:3px 10px;color:#fff;font-weight:800;font-size:13px}
+@media print{
+  body.printing header.top,body.printing .wrap,body.printing .sheet .hd,body.printing .sheet .ft,body.printing .toast{display:none!important}
+  body.printing .sheetbg{position:static;background:none;display:block}
+  body.printing .sheet{max-height:none;box-shadow:none;border-radius:0;max-width:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>สั่งอาหารผู้ป่วย<small id="hdsub"></small></h1>
+  <div class="seg" role="tablist" aria-label="บทบาท">
+    <button data-a="role" data-v="nurse" id="r-nurse">พยาบาล</button>
+    <button data-a="role" data-v="kitchen" id="r-kitchen">ห้องครัว</button>
+  </div>
+</header>
+<main class="wrap" id="app"></main>
+<div id="layer"></div>
+<div id="toastbox"></div>
+
+<script>
+/* ---------- ค่าคงที่ ---------- */
+const MEALS=[{k:'m',n:'เช้า',cut:'06:30'},{k:'l',n:'กลางวัน',cut:'10:00'},{k:'d',n:'เย็น',cut:'15:00'}];
+const TEX=[
+ {k:'normal',s:'ธ',t:'ธรรมดา',n:'อาหารธรรมดา'},
+ {k:'soft',s:'อ',t:'อ่อน',n:'อาหารอ่อน'},
+ {k:'minced',s:'บด',t:'บดละเอียด',n:'อาหารบดละเอียด'},
+ {k:'thick',s:'ข้น',t:'เหลวข้น',n:'อาหารเหลวข้น'},
+ {k:'clear',s:'ใส',t:'เหลวใส',n:'อาหารเหลวใส'},
+ {k:'bd',s:'BD',t:'BD',n:'อาหารทางสายยาง (BD)'},
+ {k:'npo',s:'NPO',t:'NPO',n:'งดอาหาร (NPO)'}];
+const RES=[
+ {k:'dm',s:'DM',n:'เบาหวาน'},{k:'low',s:'จืด',n:'จืด / โซเดียมต่ำ'},
+ {k:'kid',s:'ไต',n:'โรคไต'},{k:'lf',s:'ไขมันต่ำ',n:'ไขมันต่ำ'},{k:'hp',s:'โปรตีนสูง',n:'โปรตีนสูง'}];
+const FORMULAS=['สูตรทั่วไป','สูตรเบาหวาน','สูตรโรคไต'];
+const ISOTYPES={contact:'สัมผัส (Contact)',droplet:'ละอองฝอย (Droplet)',airborne:'ทางอากาศ (Airborne)'};
+const STL={ordered:'รอทำ',prep:'กำลังจัด',sent:'ส่งแล้ว',left:'วางหน้าห้องแล้ว',none:'ยังไม่สั่ง'};
+const ZN={gen:'สามัญ',sp:'พิเศษ',iso:'แยกโรค'};
+const tx=k=>TEX.find(t=>t.k===k), rs=k=>RES.find(r=>r.k===k);
+
+/* ---------- ข้อมูลตัวอย่าง ---------- */
+const P={}, ORDER=[];
+const today=()=>new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+const hn=()=>String(Math.floor(100000+Math.random()*899999));
+function mk(id,zone,label,seed,extra={}){
+  ORDER.push(id);
+  if(!seed){P[id]={id,zone,label,occ:false,...extra};return;}
+  const [name,age,dx,tex,restr,allergy,tube]=seed;
+  P[id]={id,zone,label,occ:true,name,age,dx,hn:hn(),allergy:allergy||'',
+    diet:{tex,restr:restr?restr.split(','):[],doctor:'นพ.วิชัย สุขสันต์',date:today(),
+      tube:tube||{sub:'natural',formula:'',kcal:1,line:'NG',method:'bolus',vol:250,times:5,flush:30}},
+    orders:{},log:[{t:'07:10',u:'พย.สมใจ',x:'บันทึกคำสั่งอาหารจากแพทย์'}],...extra};
+}
+const G=[
+['สมชาย ใจดี',68,'ปอดอักเสบ','soft','low,dm'],['สมหญิง รักษ์ดี',72,'เบาหวาน','normal','dm'],
+['ประยุทธ์ มั่นคง',59,'ความดันสูง','normal','low'],['วิไล สุขใจ',81,'ไตวายเรื้อรัง','soft','kid,low'],
+['บุญมี แก้วใส',75,'โรคหลอดเลือดสมอง','bd','',,{sub:'natural',formula:'',kcal:1,line:'NG',method:'bolus',vol:250,times:5,flush:30}],
+['ศรีสุดา วงศ์ดี',64,'หัวใจล้มเหลว','normal','low','ถั่วลิสง'],['มานะ พากเพียร',55,'ตับอักเสบ','normal','lf'],
+['ทองดี ศรีสวัสดิ์',83,'กระดูกสะโพกหัก','soft',''],['ลำดวน หอมหวล',70,'เบาหวาน ความดันสูง','normal','dm,low'],
+['อนงค์ เพชรดี',47,'ผ่าตัดไส้ติ่ง','npo',''],
+['สุรชัย กล้าหาญ',66,'โรคหลอดเลือดสมอง','bd','dm',,{sub:'formula',formula:'สูตรเบาหวาน',kcal:1,line:'PEG',method:'continuous',vol:100,times:6,flush:50}],
+['พิมพ์ใจ ใจงาม',39,'กระเพาะอักเสบ','soft',''],['ชัยวัฒน์ มีสุข',61,'ไตเรื้อรัง','normal','kid'],
+['จันทร์เพ็ญ แสงทอง',77,'ปอดอักเสบ','minced',''],['ประสิทธิ์ ดีเลิศ',58,'เบาหวาน','normal','dm','กุ้ง'],
+['นวลจันทร์ ใจเย็น',69,'หัวใจ','soft','low'],['เกียรติศักดิ์ ยิ่งยง',52,'ตับแข็ง','normal','hp,low'],
+['สายสมร ทองคำ',85,'ปอดอักเสบ','thick',''],['วีระ ชูชื่น',63,'เบาหวาน ไต','soft','dm,kid'],
+['รัตนา บุญมา',44,'นิ่วในไต','normal',''],
+['อภิชาติ สุขสม',73,'โรคหลอดเลือดสมอง','bd','',,{sub:'formula',formula:'สูตรทั่วไป',kcal:1,line:'NG',method:'bolus',vol:300,times:5,flush:30}],
+['กัญญา ศรีสุข',56,'ไขมันในเลือดสูง','normal','lf'],['ธวัช นามดี',67,'เบาหวาน','soft','dm'],
+['ปราณี มีชัย',79,'กระดูกหัก','normal',''],['สุเทพ ใจบุญ',60,'ท้องเสีย','clear',''],
+['สมศักดิ์ พึ่งบุญ',71,'หัวใจ','normal','low']];
+for(let i=1;i<=30;i++) mk('B'+i,'gen',String(i),G[i-1]);
+const S=[
+['อรุณี ธนารักษ์',58,'เบาหวาน','normal','dm'],['วิชัย เจริญสุข',74,'หัวใจ','soft','low'],
+['ปิยะนุช มั่งมี',66,'โรคไต','normal','kid,low'],
+['ชาญณรงค์ รุ่งเรือง',80,'โรคหลอดเลือดสมอง','bd','',,{sub:'natural',formula:'',kcal:1.2,line:'NG',method:'bolus',vol:250,times:5,flush:30}],
+['มาลี ศรีทอง',62,'ผ่าตัดเข่า','normal',''],['ธนากร วัฒนา',49,'ตับอักเสบ','normal','lf']];
+for(let i=1;i<=8;i++) mk('SP'+i,'sp','SP'+i,S[i-1],{room:i<=6?'ห้องเดี่ยว':'VIP'});
+const I=[
+['สุพจน์ แสนสุข',65,'วัณโรคปอด','normal','low',,,'airborne'],
+['นภา ใสสะอาด',34,'ไข้หวัดใหญ่','soft','',,,'droplet'],
+['ณัฐวุฒิ ทรงศรี',52,'MRSA','normal','dm',,,'contact']];
+const ISO_N=4;
+for(let i=1;i<=ISO_N;i++){const s=I[i-1];mk('ISO'+i,'iso','ISO'+i,s,s?{iso:{type:s[7],start:today()}}:{});}
+const defOrder=()=>({st:'none',rice:'rice',portion:'normal',note:'',rel:0,changed:false,urgent:false});
+let idx=0;
+for(const id of ORDER){const p=P[id];if(!p.occ)continue;idx++;
+  for(const m of MEALS)p.orders[m.k]=defOrder();
+  if(p.diet.tex==='npo')continue;
+  const mid=['soft','normal'].includes(p.diet.tex);
+  p.orders.m.st=p.zone==='iso'?'left':'sent';
+  p.orders.l.st=idx%4===0?'none':(idx%5===0?'prep':'ordered');
+  if(!mid)for(const m of MEALS)p.orders[m.k].rice=null;
+  if(p.zone==='sp')p.orders.l.rel=p.id==='SP1'||p.id==='SP2'?1:0;
+}
+const nowHM=new Date();
+
+/* ---------- state ---------- */
+const st={role:'nurse',meal:'l',filter:'all',sheet:null,draft:null,errs:[],locked:false,kview:'list',labels:false,msgs:[],showmsgs:false,notify:null,undo:null};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const ord=(p,m=st.meal)=>p.orders[m]||defOrder();
+const occ=()=>ORDER.map(i=>P[i]).filter(p=>p.occ);
+const isNPO=p=>p.diet.tex==='npo';
+const abbr=d=>d.tex==='npo'?'NPO':[tx(d.tex).s,...d.restr.map(r=>rs(r).s)].join('+');
+const kname=d=>d.tex==='bd'?(d.tube.sub==='natural'?'BD · บดธรรมชาติ':'BD · สูตรสำเร็จรูป'):[tx(d.tex).t,...d.restr.map(r=>rs(r).s)].join(' + ');
+const mealName=k=>MEALS.find(m=>m.k===k).n;
+const riceOK=d=>['normal','soft'].includes(d.tex);
+const riceLabel=(d,v)=>v==='porridge'?'โจ๊ก':v==='congee'?'ข้าวต้ม':'ข้าวสวย';
+function toast(msg,undo){
+  const b=$('#toastbox');
+  b.innerHTML=`<div class="toast" role="status"><span>${esc(msg)}</span>${undo?'<button data-a="undo">ย้อนกลับ</button>':''}</div>`;
+  clearTimeout(toast.t);toast.t=setTimeout(()=>b.innerHTML='',undo?6000:2800);
+}
+
+/* ---------- render หลัก ---------- */
+function render(){
+  $('#r-nurse').classList.toggle('on',st.role==='nurse');
+  $('#r-kitchen').classList.toggle('on',st.role==='kitchen');
+  const d=new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long'});
+  $('#hdsub').textContent=d+' · '+(st.role==='nurse'?'มุมมองพยาบาล':'มุมมองห้องครัว');
+  $('#app').innerHTML=st.role==='nurse'?nurseHTML():kitchenHTML();
+  $('#layer').innerHTML=(st.sheet?sheetHTML():'')+(st.labels?labelsHTML():'')+(st.notify?notifyHTML():'');
+  document.body.classList.toggle('printing',st.labels);
+}
+function mealTabs(){
+  return `<div class="tabs" role="tablist">${MEALS.map(m=>`<button data-a="meal" data-v="${m.k}" class="${st.meal===m.k?'on':''}">${m.n}<small>ตัดรอบ ${m.cut}</small></button>`).join('')}</div>`;
+}
+function counts(zone){
+  const l=occ().filter(p=>(!zone||p.zone===zone)&&!isNPO(p));
+  const total=(zone?ORDER.map(i=>P[i]).filter(p=>p.zone===zone):ORDER.map(i=>P[i])).length;
+  return {done:l.filter(p=>ord(p).st!=='none').length,need:l.length,occ:occ().filter(p=>!zone||p.zone===zone).length,total};
+}
+
+/* ---------- มุมมองพยาบาล ---------- */
+function bedHTML(p){
+  if(!p.occ)return `<div class="bed vacant"><span class="no">${p.label}</span><span class="st">ว่าง</span></div>`;
+  const o=ord(p),npo=isNPO(p);
+  const cls=npo?'npo':(o.st==='none'?'none':(o.st==='ordered'?'ordered':(o.st==='prep'?'prep':'ordered')));
+  const label=npo?'งดอาหาร':(o.st==='none'?'ยังไม่สั่ง':(o.st==='ordered'?'สั่งแล้ว':'ครัว: '+STL[o.st]));
+  return `<button class="bed ${cls} ${p.diet.tex==='bd'?'tube':''}" data-a="open" data-v="${p.id}" aria-label="เตียง ${p.label} ${esc(p.name)} ${abbr(p.diet)} ${label}">
+    <span class="tagrow">${p.allergy?'<span class="tag al">แพ้</span>':''}${p.zone==='iso'?'<span class="tag iso">แยกโรค</span>':''}${o.changed?'<span class="tag chg">เปลี่ยน</span>':''}</span>
+    <span class="no">${p.label}</span><span class="nm">${esc(p.name)}</span>
+    <span class="dt">${esc(abbr(p.diet))}</span><span class="st">${label}</span></button>`;
+}
+function nurseHTML(){
+  const c=counts(),cg=counts('gen'),cs=counts('sp'),ci=counts('iso');
+  const f=st.filter;
+  const zones=[['gen','โซนสามัญ','เตียง 1–30',cg,''],['sp','ห้องพิเศษ','SP1–SP8',cs,'sp'],['iso','ห้องแยกโรค','ISO1–ISO'+ISO_N,ci,'iso']];
+  const cut=MEALS.find(m=>m.k===st.meal).cut;
+  const unread=st.msgs.filter(m=>!m.read).length;
+  return `
+  ${unread?`<div class="banner"><b>ข้อความจากห้องครัว ${unread} รายการ</b><button data-a="msgs">${st.showmsgs?'ซ่อน':'ดูข้อความ'}</button></div>`:''}
+  ${st.showmsgs?`<div class="card" style="margin:0 0 12px">${st.msgs.map(m=>`<div><b>${esc(m.bed)}</b> · ${m.time} · ${esc(m.text)}</div>`).join('')||'ไม่มีข้อความ'}<button style="margin-top:8px" data-a="readall">รับทราบทั้งหมด</button></div>`:''}
+  <div class="bar">${mealTabs()}
+    <div style="flex:1"></div>
+    <div><b style="font-size:22px">สั่งแล้ว ${c.done}/${c.need}</b><div class="mut">สามัญ ${cg.done}/${cg.need} · พิเศษ ${cs.done}/${cs.need} · แยกโรค ${ci.done}/${ci.need}</div></div>
+  </div>
+  <div class="bar">
+    <div class="chips" aria-label="กรองโซน">${[['all','ทั้งหมด'],['gen','สามัญ'],['sp','พิเศษ'],['iso','แยกโรค']].map(([k,n])=>`<button data-a="filter" data-v="${k}" class="${f===k?'on':''}">${n}</button>`).join('')}</div>
+    <div style="flex:1"></div>
+    <button class="primary" data-a="orderall" ${st.locked?'disabled':''}>สั่งทั้งหมดตามคำสั่งแพทย์</button>
+  </div>
+  ${st.locked?`<div class="banner" style="background:var(--wait-bg);border-color:var(--wait)"><b>เลยเวลาตัดรอบ (${cut}) แล้ว</b><span>แก้ไขได้เฉพาะ "แก้ไขด่วน" พร้อมระบุเหตุผล</span></div>`:`<div class="mut" style="margin-bottom:6px">ปิดรับออเดอร์${mealName(st.meal)}เวลา ${cut} น.</div>`}
+  ${zones.filter(z=>f==='all'||f===z[0]).map(([k,n,r,cc,cl])=>`
+    <div class="zonehead ${cl}"><h2>${n}</h2><span class="cnt">${r} · สั่งแล้ว ${cc.done}/${cc.need} · มีผู้ป่วย ${cc.occ}/${cc.total}</span></div>
+    <div class="grid">${ORDER.map(i=>P[i]).filter(p=>p.zone===k).map(bedHTML).join('')}</div>`).join('')}
+  <div class="legend">
+    <span><i style="background:var(--ok-bg);border-color:var(--ok)"></i>สั่งแล้ว</span>
+    <span><i style="background:var(--wait-bg);border-color:var(--wait)"></i>ยังไม่สั่ง</span>
+    <span><i style="background:var(--prep-bg);border-color:var(--prep)"></i>ครัวกำลังจัด</span>
+    <span><i style="background:var(--bad-bg);border-color:var(--bad)"></i>งดอาหาร (NPO)</span>
+    <span><i style="background:var(--panel);border-color:var(--bd);border-bottom-width:5px"></i>BD ทางสายยาง</span>
+  </div>
+  <div class="legend">ธ=ธรรมดา · อ=อ่อน · บด=บดละเอียด · ข้น=เหลวข้น · ใส=เหลวใส · DM=เบาหวาน · จืด=โซเดียมต่ำ · BD=ทางสายยาง</div>
+  <div class="demo"><span>ทดลองระบบ:</span>
+    <button data-a="lock">${st.locked?'จำลองก่อนตัดรอบ':'จำลองเลยเวลาตัดรอบ'}</button>
+    <span>ข้อมูลทั้งหมดเป็นตัวอย่าง (ผู้ป่วยสมมติ) และรีเซ็ตเมื่อโหลดหน้าใหม่</span></div>`;
+}
+
+/* ---------- แผ่นรายละเอียดเตียง (พยาบาล) ---------- */
+function openSheet(id){
+  const p=P[id];if(!p.occ)return;
+  const o=ord(p);
+  st.sheet=id;
+  st.draft={diet:clone(p.diet),allergy:p.allergy,order:clone(o),iso:p.iso?clone(p.iso):null,docReset:false,origDiet:clone(p.diet)};
+  st.errs=[];render();
+}
+function dietChanged(){
+  const a=clone(st.draft.diet),b=clone(st.draft.origDiet);a.doctor=b.doctor='';a.date=b.date='';
+  return JSON.stringify(a)!==JSON.stringify(b);
+}
+function sheetHTML(){
+  const p=P[st.sheet],d=st.draft,t=d.diet.tex,o=d.order,meal=mealName(st.meal);
+  const prevKey=MEALS[MEALS.findIndex(m=>m.k===st.meal)-1]?.k;
+  const changed=dietChanged();
+  const lockNote=st.locked;
+  const exist=ord(p).st!=='none';
+  return `<div class="sheetbg" data-a="closebg"><div class="sheet" role="dialog" aria-modal="true" aria-label="เตียง ${p.label}">
+  <div class="hd"><div style="flex:1"><div style="font-size:22px;font-weight:800">${p.zone==='gen'?'เตียง ':'ห้อง '}${p.label} ${p.zone==='sp'?`<span class="tag sp">${p.room}</span>`:''}${p.zone==='iso'?'<span class="tag iso">แยกโรค</span>':''}</div>
+    <div>${esc(p.name)} · ${p.age} ปี · HN ${p.hn}</div><div class="mut">โรค: ${esc(p.dx)}</div></div>
+    <button data-a="close" aria-label="ปิด">ปิด</button></div>
+  <div class="bd">
+   ${d.allergy?`<div class="card al"><b>⚠ แพ้อาหาร: ${esc(d.allergy)}</b></div>`:''}
+   <div class="sec"><h3>ชนิดอาหารตามคำสั่งแพทย์ <span class="note">มื้อ${meal}</span></h3>
+    <div class="opts" role="group" aria-label="ลักษณะอาหาร">${TEX.map(x=>`<button data-a="tex" data-v="${x.k}" class="${t===x.k?'on':''} ${x.k==='npo'?'nopt':''} ${x.k==='bd'?'bdopt':''}"><b>${x.s}</b> ${x.n.replace('อาหาร','')}</button>`).join('')}</div>
+    <h3 style="margin-top:12px">ข้อจำกัดเฉพาะโรค <span class="note">${t==='npo'?'ใช้ไม่ได้กับ NPO':'เลือกได้หลายข้อ'}</span></h3>
+    <div class="opts" role="group" aria-label="ข้อจำกัดเฉพาะโรค">${RES.map(x=>`<button data-a="res" data-v="${x.k}" ${t==='npo'?'disabled':''} class="${d.diet.restr.includes(x.k)?'on':''}">${x.n}</button>`).join('')}</div>
+    <label class="f" for="f-doc">แพทย์ผู้สั่ง <span class="req">*</span> ${changed?'<span class="req">(เปลี่ยนคำสั่ง กรุณากรอกใหม่)</span>':''}</label>
+    <input id="f-doc" data-f="diet.doctor" value="${esc(d.diet.doctor)}" placeholder="เช่น นพ.สมชาย ..." style="${changed&&!d.diet.doctor?'border-color:var(--bad);border-width:2px':''}">
+    <div class="mut">คำสั่งล่าสุด: ${p.diet.date}</div>
+    <label class="f" for="f-al">แพ้อาหาร</label>
+    <input id="f-al" data-f="allergy" value="${esc(d.allergy)}" placeholder="ไม่มี / ระบุชนิดอาหารที่แพ้">
+   </div>
+
+   ${t==='bd'?tubeHTML(d):''}
+
+   ${p.zone==='iso'?`<div class="sec"><div class="card isoc"><h3>การแยกโรค</h3>
+     <div class="opts">${Object.entries(ISOTYPES).map(([k,n])=>`<button data-a="isot" data-v="${k}" class="${d.iso.type===k?'on':''}">${n}</button>`).join('')}</div>
+     <div class="mut" style="margin-top:8px">ภาชนะใช้ครั้งเดียวทิ้ง (ถาด จาน ช้อน แก้ว) · วางหน้าห้องหรือช่องรับอาหาร ไม่เข้าห้อง · เริ่มแยกโรค ${d.iso.start}</div></div></div>`:''}
+
+   ${t!=='npo'?`<div class="sec"><h3>ตัวเลือกมื้อ${meal}</h3>
+     ${riceOK(d.diet)?`<div class="opts" role="group" aria-label="ประเภทข้าว">${['rice','porridge','congee'].filter(v=>t==='normal'?v==='rice'||v==='porridge':v!=='rice').map(v=>`<button data-a="rice" data-v="${v}" class="${o.rice===v?'on':''}">${riceLabel(d.diet,v)}</button>`).join('')}</div>`
+       :`<div class="mut">ชนิดนี้ไม่เลือกข้าว/โจ๊ก (ระบบป้องกันการเลือกขัดกับชนิดอาหาร)</div>`}
+     <div class="opts" style="margin-top:8px" role="group" aria-label="ปริมาณ"><button data-a="por" data-v="small" class="${o.portion==='small'?'on':''}">ปริมาณน้อย</button><button data-a="por" data-v="normal" class="${o.portion==='normal'?'on':''}">ปริมาณปกติ</button></div>
+     <label class="f" for="f-note">หมายเหตุถึงห้องครัว</label>
+     <input id="f-note" data-f="order.note" value="${esc(o.note)}" placeholder="เช่น ไม่ใส่ผักชี">
+     ${p.zone==='sp'?`<div class="card spc"><b>ห้องพิเศษ</b> · ส่งถึงห้องโดยตรง
+       <div class="stepper" style="margin-top:6px"><span>อาหารญาติ/ผู้ดูแล (ชำระเอง)</span><button data-a="rel" data-v="-1" aria-label="ลด">−</button><b>${o.rel}</b><button data-a="rel" data-v="1" aria-label="เพิ่ม">+</button><span class="mut">ชุด</span></div></div>`:''}
+   </div>`:`<div class="card al" style="margin-top:14px"><b>งดอาหาร (NPO)</b><div class="mut">ไม่ต้องสั่งอาหาร ครัวจะเห็นเป็นเตียงงดอาหาร</div></div>`}
+
+   ${lockNote?`<div class="card" style="border-color:var(--wait)"><b>แก้ไขด่วน (เลยเวลาตัดรอบ)</b><label class="f" for="f-urg">เหตุผล <span class="req">*</span></label><input id="f-urg" data-f="urgent" value="${esc(d.urgent||'')}" placeholder="เช่น แพทย์เปลี่ยนคำสั่งเมื่อสักครู่"></div>`:''}
+
+   ${st.errs.length?`<div class="err" role="alert">${st.errs.map(e=>'• '+esc(e)).join('<br>')}</div>`:''}
+
+   <div class="sec"><h3>ประวัติการแก้ไข</h3>${p.log.slice(-4).reverse().map(l=>`<div class="log">${l.t} · ${esc(l.u)} · ${esc(l.x)}</div>`).join('')}</div>
+  </div>
+  <div class="ft">
+   ${prevKey&&t!=='npo'?`<button data-a="copyprev">คัดลอกมื้อ${mealName(prevKey)}</button>`:''}
+   ${exist&&!lockNote&&ord(p).st==='ordered'?`<button data-a="cancelorder">ยกเลิกมื้อนี้</button>`:''}
+   <button class="primary" data-a="save">${t==='npo'?'บันทึกงดอาหาร':lockNote?'ส่งแก้ไขด่วน':exist?'บันทึกการแก้ไข':'ยืนยันสั่ง'}</button>
+  </div></div></div>`;
+}
+function tubeHTML(d){
+  const tb=d.diet.tube;
+  return `<div class="sec"><div class="card bdc"><h3>อาหารทางสายยาง (BD)</h3>
+   <div class="opts" role="group" aria-label="ประเภท BD"><button data-a="tsub" data-v="natural" class="${tb.sub==='natural'?'on bdopt':''}">BD บดธรรมชาติ</button><button data-a="tsub" data-v="formula" class="${tb.sub==='formula'?'on bdopt':''}">BD สูตรสำเร็จรูป</button></div>
+   ${tb.sub==='natural'?`<label class="f" for="t-k">ความเข้มข้น (kcal/มล.) <span class="req">*</span></label><input id="t-k" type="number" step="0.1" min="0.5" max="2" inputmode="decimal" data-f="diet.tube.kcal" value="${tb.kcal}">`
+     :`<label class="f" for="t-f">สูตร <span class="req">*</span></label><select id="t-f" data-f="diet.tube.formula"><option value="">เลือกสูตร</option>${FORMULAS.map(x=>`<option ${tb.formula===x?'selected':''}>${x}</option>`).join('')}</select>`}
+   <label class="f">ชนิดสาย</label>
+   <div class="opts"><button data-a="tline" data-v="NG" class="${tb.line==='NG'?'on bdopt':''}">NG ทางจมูก</button><button data-a="tline" data-v="PEG" class="${tb.line==='PEG'?'on bdopt':''}">PEG ทางหน้าท้อง</button></div>
+   <label class="f">วิธีให้</label>
+   <div class="opts"><button data-a="tmeth" data-v="bolus" class="${tb.method==='bolus'?'on bdopt':''}">Bolus (เป็นมื้อ)</button><button data-a="tmeth" data-v="continuous" class="${tb.method==='continuous'?'on bdopt':''}">หยดต่อเนื่อง</button></div>
+   <div class="two"><div><label class="f" for="t-v">ปริมาณต่อมื้อ (มล.) <span class="req">*</span></label><input id="t-v" type="number" min="0" inputmode="numeric" data-f="diet.tube.vol" value="${tb.vol}"></div>
+   <div><label class="f" for="t-t">จำนวนมื้อ/วัน <span class="req">*</span></label><input id="t-t" type="number" min="1" inputmode="numeric" data-f="diet.tube.times" value="${tb.times}"></div></div>
+   <label class="f" for="t-w">น้ำล้างสาย (มล.) <span class="req">*</span></label><input id="t-w" type="number" min="0" inputmode="numeric" data-f="diet.tube.flush" value="${tb.flush}">
+  </div></div>`;
+}
+
+/* ---------- บันทึก ---------- */
+function saveSheet(){
+  const p=P[st.sheet],d=st.draft,t=d.diet.tex,errs=[];
+  const changed=dietChanged();
+  if(!d.diet.doctor.trim())errs.push('กรอกชื่อแพทย์ผู้สั่ง');
+  if(t==='bd'){const tb=d.diet.tube;
+    if(tb.sub==='formula'&&!tb.formula)errs.push('เลือกสูตรสำเร็จรูป');
+    if(tb.sub==='natural'&&!(tb.kcal>0))errs.push('ระบุความเข้มข้น (kcal/มล.)');
+    if(!(tb.vol>0))errs.push('ระบุปริมาณต่อมื้อ (มล.)');
+    if(!(tb.times>0))errs.push('ระบุจำนวนมื้อต่อวัน');
+    if(!(tb.flush>=0)||tb.flush===''||tb.flush==null)errs.push('ระบุน้ำล้างสาย (มล.)');}
+  if(st.locked&&!(d.urgent||'').trim())errs.push('ระบุเหตุผลการแก้ไขด่วน');
+  if(errs.length){st.errs=errs;render();const b=document.querySelector('.sheet');if(b)b.scrollTop=b.scrollHeight;return;}
+  const u='พย.สมใจ',now=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const prev=ord(p),had=prev.st!=='none';
+  if(changed){d.diet.date=today();p.log.push({t:now,u,x:`เปลี่ยนคำสั่งอาหาร ${abbr(p.diet)} → ${abbr(d.diet)} (${d.diet.doctor})`});}
+  p.diet=d.diet;p.allergy=d.allergy.trim();if(d.iso)p.iso=d.iso;
+  if(!riceOK(p.diet)){d.order.rice=null}else if(!d.order.rice||(p.diet.tex==='normal'&&d.order.rice==='congee')||(p.diet.tex==='soft'&&d.order.rice==='rice')){d.order.rice=p.diet.tex==='normal'?'rice':'porridge'}
+  if(t==='npo'){p.orders[st.meal]={...defOrder(),st:'none',changed:had};
+    p.log.push({t:now,u,x:`งดอาหารมื้อ${mealName(st.meal)}`});toast('บันทึกงดอาหารแล้ว');}
+  else{
+    const keep=['sent','left'].includes(prev.st);
+    const o={...d.order,st:had?(keep?prev.st:'ordered'):'ordered',changed:had&&(changed||JSON.stringify({...d.order,st:0,changed:0,urgent:0})!==JSON.stringify({...prev,st:0,changed:0,urgent:0})),urgent:st.locked};
+    p.orders[st.meal]=o;
+    p.log.push({t:now,u,x:(had?'แก้ไขออเดอร์':'สั่งอาหาร')+'มื้อ'+mealName(st.meal)+(st.locked?` (ด่วน: ${d.urgent})`:'')});
+    toast((had?'บันทึกการแก้ไขแล้ว':'สั่งอาหารแล้ว')+' · '+p.label+(o.changed?' · แจ้งครัวแล้ว':''));
+  }
+  st.sheet=null;st.draft=null;render();
+}
+
+/* ---------- ฝั่งครัว ---------- */
+function kitchenList(){
+  const zi={gen:0,sp:1,iso:2};
+  return occ().filter(p=>!isNPO(p)&&ord(p).st!=='none').sort((a,b)=>zi[a.zone]-zi[b.zone]||ORDER.indexOf(a.id)-ORDER.indexOf(b.id));
+}
+function kitchenHTML(){
+  const list=kitchenList(),notOrdered=occ().filter(p=>!isNPO(p)&&ord(p).st==='none').length;
+  const npo=occ().filter(p=>isNPO(p));
+  const groups={};list.forEach(p=>{const k=kname(p.diet);(groups[k]=groups[k]||{gen:0,sp:0,iso:0})[p.zone]++;});
+  const keys=Object.keys(groups).sort((a,b)=>(b.startsWith('BD')-a.startsWith('BD'))||a.localeCompare(b,'th'));
+  const tot={gen:0,sp:0,iso:0};list.forEach(p=>tot[p.zone]++);
+  const rel=list.reduce((s,p)=>s+(ord(p).rel||0),0);
+  const done=list.filter(p=>['sent','left'].includes(ord(p).st)).length;
+  const changed=list.filter(p=>ord(p).changed);
+  const alg=list.filter(p=>p.allergy);
+  const zones=[['gen','สามัญ',''],['sp','ห้องพิเศษ · ส่งถึงห้อง','sp'],['iso','ห้องแยกโรค · ส่งเป็นรายการสุดท้าย','iso']];
+  return `
+  <div class="bar">${mealTabs()}<div style="flex:1"></div>
+    <button data-a="printall" ${list.length?'':'disabled'}>พิมพ์ฉลากทั้งหมด (${list.length})</button></div>
+  <div class="kpis">
+    <div class="kpi"><b>${list.length}</b><span>ถาดที่ต้องจัด</span></div>
+    <div class="kpi"><b>${done}/${list.length}</b><span>จัดส่งแล้ว</span></div>
+    <div class="kpi"><b>${rel}</b><span>อาหารญาติ (ห้องพิเศษ)</span></div>
+    <div class="kpi"><b>${tot.iso}</b><span>ชุดภาชนะใช้ครั้งเดียว</span></div>
+  </div>
+  ${notOrdered?`<div class="banner" style="background:var(--wait-bg);border-color:var(--wait)"><b>ยังไม่มีออเดอร์ ${notOrdered} เตียง</b><span>พยาบาลยังไม่ได้สั่งมื้อ${mealName(st.meal)}</span></div>`:''}
+  ${changed.length?`<div class="banner"><b>คำสั่งเปลี่ยน ${changed.length} เตียง</b><span>${changed.map(p=>p.label).join(', ')} — ตรวจฉลากใหม่ก่อนส่ง</span></div>`:''}
+  ${alg.length?`<div class="card al"><b>⚠ ผู้ป่วยแพ้อาหาร:</b> ${alg.map(p=>`${p.label} (${esc(p.allergy)})`).join(' · ')}</div>`:''}
+  ${npo.length?`<div class="mut" style="margin:6px 0">งดอาหาร (NPO): ${npo.map(p=>p.label).join(', ')} — ไม่ต้องจัด</div>`:''}
+  <h2 style="font-size:18px;margin:16px 0 6px">สรุปยอดตามชนิดอาหาร</h2>
+  <table class="sum"><thead><tr><th>ชนิดอาหาร</th><th>สามัญ</th><th>พิเศษ</th><th>แยกโรค</th><th>รวม</th></tr></thead>
+   <tbody>${keys.map(k=>{const g=groups[k];return `<tr><td style="${k.startsWith('BD')?'color:var(--bd);font-weight:800':'font-weight:700'}">${esc(k)}</td><td>${g.gen||'–'}</td><td>${g.sp||'–'}</td><td>${g.iso||'–'}</td><td><b>${g.gen+g.sp+g.iso}</b></td></tr>`}).join('')||'<tr><td colspan="5">ยังไม่มีออเดอร์</td></tr>'}</tbody>
+   <tfoot><tr><td>รวม</td><td>${tot.gen}</td><td>${tot.sp}</td><td>${tot.iso}</td><td>${list.length}</td></tr></tfoot></table>
+  ${zones.map(([z,n,cl])=>{const rows=list.filter(p=>p.zone===z);return rows.length?`<div class="zonehead ${cl}"><h2>${n}</h2><span class="cnt">${rows.length} ถาด</span></div>${rows.map(rowHTML).join('')}`:''}).join('')}
+  <div class="mut" style="margin-top:16px">ห้องครัวดูได้อย่างเดียว ไม่เห็นชื่อโรคและไม่แก้คำสั่งได้ — พบปัญหาให้กด "แจ้งพยาบาล"</div>`;
+}
+function rowHTML(p){
+  const o=ord(p),d=p.diet,tb=d.tube;
+  const next={ordered:'prep',prep:'sent',sent:p.zone==='iso'?'left':null,left:null}[o.st];
+  const nextLbl={ordered:'เริ่มจัด',prep:'ส่งแล้ว',sent:'วางหน้าห้องแล้ว'}[o.st];
+  return `<div class="row ${o.st} ${d.tex==='bd'?'tube':''}">
+    <div class="no">${p.label}</div>
+    <div class="info"><div class="d">${esc(kname(d))} ${o.changed?'<span class="tag chg">เปลี่ยนคำสั่ง</span>':''} ${o.urgent?'<span class="tag al">ด่วน</span>':''}</div>
+      <div class="mut">${esc(p.name)} · HN ${p.hn}${d.tex==='bd'?` · ${tb.line} · ${tb.method==='bolus'?'Bolus':'หยดต่อเนื่อง'} · ${tb.vol} มล. ×${tb.times} มื้อ · ล้างสาย ${tb.flush} มล.${tb.sub==='natural'?` · ${tb.kcal} kcal/มล.`:` · ${esc(tb.formula)}`}`:''}${o.rice?' · '+riceLabel(d,o.rice):''}${o.portion==='small'?' · ปริมาณน้อย':''}</div>
+      ${p.allergy?`<div style="color:var(--bad);font-weight:700">⚠ แพ้: ${esc(p.allergy)}</div>`:''}
+      ${p.zone==='iso'?`<div style="color:var(--iso);font-weight:700">แยกโรค-${ISOTYPES[p.iso.type].split(' ')[0]} · ภาชนะใช้ครั้งเดียว ไม่ต้องเก็บคืน · วางหน้าห้อง</div>`:''}
+      ${p.zone==='sp'&&o.rel?`<div style="color:var(--gold);font-weight:700">+ อาหารญาติ ${o.rel} ชุด</div>`:''}
+      ${o.note?`<div class="mut">หมายเหตุ: ${esc(o.note)}</div>`:''}</div>
+    <div class="acts">
+      <button data-a="label" data-v="${p.id}">ฉลาก</button>
+      <button data-a="notify" data-v="${p.id}">แจ้งพยาบาล</button>
+      ${next?`<button class="adv ${o.st}" data-a="adv" data-v="${p.id}">${nextLbl}</button>`:`<button class="adv ${o.st}" disabled>${STL[o.st]}</button>`}
+    </div></div>`;
+}
+function labelOne(p){
+  const o=ord(p),d=p.diet,tb=d.tube,mealN=mealName(st.meal);
+  const bar=d.tex==='bd'?`<div class="bar2" style="background:#1c6c8a">BD · อาหารทางสายยาง</div>`:p.zone==='iso'?`<div class="bar2" style="background:#6b4fa0">แยกโรค-${ISOTYPES[p.iso.type].split(' ')[0]}</div>`:p.zone==='sp'?`<div class="bar2" style="background:#a8791c">ห้องพิเศษ</div>`:'';
+  return `<div class="lab ${d.tex==='bd'?'bdl':''} ${p.zone==='iso'?'isol':''}">${bar}
+   <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="big">${p.label}</span><span>${mealN}</span></div>
+   <div><b>${esc(p.name)}</b> · HN ${p.hn}</div>
+   <div class="big" style="font-size:20px;margin:4px 0">${esc(kname(d))}</div>
+   ${d.tex==='bd'?`<div>${tb.sub==='natural'?'บดธรรมชาติ '+tb.kcal+' kcal/มล.':esc(tb.formula)} · ${tb.line} · ${tb.method==='bolus'?'Bolus':'หยดต่อเนื่อง'}<br>${tb.vol} มล./มื้อ · ล้างสาย ${tb.flush} มล.</div>`:(o.rice?`<div>${riceLabel(d,o.rice)}${o.portion==='small'?' · ปริมาณน้อย':''}</div>`:'')}
+   ${p.allergy?`<div style="font-weight:800;color:#c00">⚠ แพ้: ${esc(p.allergy)}</div>`:''}
+   ${p.zone==='iso'?'<div style="font-weight:700">ภาชนะใช้ครั้งเดียว ไม่ต้องเก็บคืน</div>':''}
+   ${o.note?`<div>หมายเหตุ: ${esc(o.note)}</div>`:''}</div>`;
+}
+function labelsHTML(){
+  const ids=st.labels===true?kitchenList():[P[st.labels]];
+  return `<div class="sheetbg" data-a="closebg"><div class="sheet" role="dialog" aria-label="ฉลากติดถาด">
+   <div class="hd"><b style="flex:1;font-size:18px;align-self:center">ฉลากติดถาด · มื้อ${mealName(st.meal)}</b>
+   <button class="primary" data-a="doprint">พิมพ์</button><button data-a="close">ปิด</button></div>
+   <div class="bd" style="padding-top:12px"><div class="labels">${ids.map(labelOne).join('')}</div></div></div></div>`;
+}
+function notifyHTML(){
+  const p=P[st.notify];
+  return `<div class="sheetbg" data-a="closebg"><div class="sheet" role="dialog" aria-label="แจ้งพยาบาล">
+   <div class="hd"><b style="flex:1;font-size:18px;align-self:center">แจ้งพยาบาล · ${p.label}</b><button data-a="close">ปิด</button></div>
+   <div class="bd"><div class="opts" style="margin-top:12px">${['ข้อมูลไม่ชัดเจน','ปริมาณ/สูตรไม่ตรงกับคำสั่ง','สงสัยเรื่องแพ้อาหาร','ไม่พบผู้ป่วยที่เตียง'].map(x=>`<button data-a="quick" data-v="${x}">${x}</button>`).join('')}</div>
+   <label class="f" for="f-msg">ข้อความ</label><textarea id="f-msg" data-f="msg" placeholder="พิมพ์ข้อความสั้นๆ"></textarea></div>
+   <div class="ft"><button class="primary" data-a="sendmsg">ส่งถึงพยาบาล</button></div></div></div>`;
+}
+
+/* ---------- events ---------- */
+function setPath(o,path,v){const k=path.split('.');let c=o;for(let i=0;i<k.length-1;i++)c=c[k[i]];c[k[k.length-1]]=v;}
+document.addEventListener('input',e=>{
+  const f=e.target.dataset?.f;if(!f)return;
+  if(f==='msg'){st.msg=e.target.value;return;}
+  let v=e.target.value;
+  if(e.target.type==='number')v=v===''?'':parseFloat(v);
+  setPath(st.draft,f,v);
+  if(f==='diet.doctor'||f==='allergy'){/* ไม่ต้อง render ใหม่ เพื่อไม่ให้เสียโฟกัส */}
+});
+document.addEventListener('change',e=>{
+  if(e.target.tagName==='SELECT'&&e.target.dataset.f){setPath(st.draft,e.target.dataset.f,e.target.value);}
+});
+function touchDiet(){
+  if(dietChanged()&&!st.draft.docReset){st.draft.docReset=true;st.draft.diet.doctor='';}
+  st.errs=[];render();
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-a]');if(!el)return;
+  const a=el.dataset.a,v=el.dataset.v;
+  if(a==='closebg'){if(e.target!==el)return;}
+  const d=st.draft;
+  switch(a){
+   case 'role':st.role=v;st.sheet=null;st.labels=false;render();break;
+   case 'meal':st.meal=v;render();break;
+   case 'filter':st.filter=v;render();break;
+   case 'lock':st.locked=!st.locked;render();break;
+   case 'open':openSheet(v);break;
+   case 'close':case 'closebg':st.sheet=null;st.draft=null;st.labels=false;st.notify=null;render();break;
+   case 'tex':{d.diet.tex=v;
+     if(v==='npo')d.diet.restr=[];
+     if(!riceOK(d.diet))d.order.rice=null;else d.order.rice=v==='normal'?'rice':'porridge';
+     touchDiet();break;}
+   case 'res':{const r=d.diet.restr,i=r.indexOf(v);i>=0?r.splice(i,1):r.push(v);touchDiet();break;}
+   case 'tsub':d.diet.tube.sub=v;touchDiet();break;
+   case 'tline':d.diet.tube.line=v;touchDiet();break;
+   case 'tmeth':d.diet.tube.method=v;touchDiet();break;
+   case 'isot':d.iso.type=v;render();break;
+   case 'rice':d.order.rice=v;render();break;
+   case 'por':d.order.portion=v;render();break;
+   case 'rel':d.order.rel=Math.max(0,Math.min(5,d.order.rel+parseInt(v)));render();break;
+   case 'save':saveSheet();break;
+   case 'cancelorder':{const p=P[st.sheet];p.orders[st.meal]=defOrder();p.log.push({t:new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}),u:'พย.สมใจ',x:'ยกเลิกออเดอร์มื้อ'+mealName(st.meal)});st.sheet=null;st.draft=null;render();toast('ยกเลิกออเดอร์แล้ว');break;}
+   case 'copyprev':{const p=P[st.sheet];const pk=MEALS[MEALS.findIndex(m=>m.k===st.meal)-1].k;const po=p.orders[pk]||defOrder();
+     d.order={...d.order,rice:riceOK(d.diet)?po.rice||d.order.rice:null,portion:po.portion,note:po.note,rel:po.rel};render();toast('คัดลอกตัวเลือกจากมื้อ'+mealName(pk)+'แล้ว');break;}
+   case 'orderall':orderAll();break;
+   case 'undo':if(st.undo){st.undo.forEach(([id,o])=>P[id].orders[st.meal]=o);st.undo=null;render();toast('ย้อนกลับแล้ว');}break;
+   case 'msgs':st.showmsgs=!st.showmsgs;render();break;
+   case 'readall':st.msgs.forEach(m=>m.read=true);st.showmsgs=false;render();break;
+   case 'adv':{const p=P[v],o=ord(p);const n={ordered:'prep',prep:'sent',sent:'left'}[o.st];if(n){p.orders[st.meal]={...o,st:n,changed:false};render();}break;}
+   case 'label':st.labels=v;render();break;
+   case 'printall':st.labels=true;render();break;
+   case 'doprint':try{window.print()}catch(x){toast('เปิดไฟล์นี้ในเบราว์เซอร์เพื่อพิมพ์')}break;
+   case 'notify':st.notify=v;st.msg='';render();break;
+   case 'quick':{const t=$('#f-msg');t.value=v;st.msg=v;break;}
+   case 'sendmsg':{const p=P[st.notify];const text=(st.msg||'').trim();
+     if(!text){toast('พิมพ์ข้อความก่อนส่ง');break;}
+     st.msgs.push({bed:p.label,text,time:new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}),read:false});
+     st.notify=null;render();toast('ส่งข้อความถึงพยาบาลแล้ว');break;}
+  }
+});
+function orderAll(){
+  const snap=[];let n=0,skip=0;
+  occ().forEach(p=>{
+    if(isNPO(p)||ord(p).st!=='none')return;
+    if(p.diet.tex==='bd'){const t=p.diet.tube;if(!(t.vol>0&&t.times>0)){skip++;return;}}
+    snap.push([p.id,clone(ord(p))]);
+    const o=defOrder();o.st='ordered';
+    o.rice=riceOK(p.diet)?(p.diet.tex==='normal'?'rice':'porridge'):null;
+    p.orders[st.meal]=o;n++;
+    p.log.push({t:new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}),u:'พย.สมใจ',x:'สั่งตามคำสั่งแพทย์ มื้อ'+mealName(st.meal)});
+  });
+  st.undo=snap;render();
+  toast(n?`สั่งแล้ว ${n} เตียง${skip?` · ข้าม ${skip} เตียงที่ข้อมูลไม่ครบ`:''}`:'ไม่มีเตียงที่ต้องสั่งเพิ่ม',n>0);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(st.sheet||st.labels||st.notify)){st.sheet=null;st.draft=null;st.labels=false;st.notify=null;render();}});
+render();
+</script>
+</body>
+</html>
